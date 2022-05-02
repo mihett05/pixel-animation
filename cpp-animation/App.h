@@ -8,6 +8,7 @@
 #include "CanvasRenderer.h"
 #include "Interface.h"
 #include "Settings.h"
+#include "constants.h"
 
 using namespace std;
 

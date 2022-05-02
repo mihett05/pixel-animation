@@ -2,6 +2,7 @@
 
 Interface::Interface(Settings* settings, CanvasRenderer* renderer) : m_pSettings(settings), m_pRenderer(renderer)
 {
+	m_pSaver = new Saver();
 }
 
 void Interface::init(SDL_Window* win, SDL_Renderer* renderer, int w, int h)
@@ -83,6 +84,8 @@ void Interface::renderMenu()
 				}
 				ImGui::EndMenu();
 			}
+			if (ImGui::MenuItem("Save"))
+				m_pRenderer->save(m_pSaver);
 			ImGui::EndMenu();
 		}
 		ImGui::EndMainMenuBar();

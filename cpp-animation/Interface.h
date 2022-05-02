@@ -12,6 +12,7 @@
 #include "Vector.h"
 #include "CanvasRenderer.h"
 #include "Settings.h"
+#include "Saver.h"
 
 using namespace std;
 
@@ -20,6 +21,7 @@ class Interface
 private:
 	CanvasRenderer* m_pRenderer;
 	Settings* m_pSettings;
+	Saver* m_pSaver;
 
 	void renderBrush();
 	void renderMenu();

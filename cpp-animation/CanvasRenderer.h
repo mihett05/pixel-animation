@@ -9,6 +9,8 @@
 #include "Canvas.h"
 #include "Vector.h"
 #include "Settings.h"
+#include "Saver.h"
+#include "constants.h"
 
 using namespace std;
 
@@ -54,6 +56,9 @@ public:
 	void updateWindowSize(int w, int h);
 	void update(SDL_Event& e);
 
+	void save(Saver* saver);
+
 	size_t getFramesCount();
+	Vector<int> getSizeInWindow();
 };
 

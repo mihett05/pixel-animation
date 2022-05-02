@@ -24,7 +24,15 @@ void App::update(SDL_Event& e)
 	// update texture size on window resize
 	int w, h;
 	SDL_GetWindowSize(m_pWindow, &w, &h);
-	m_pCanvasRenderer->updateWindowSize(w, h);
+
+	// because of menu bar
+	SDL_Rect viewport = {
+		0, menuBarOffset,
+		w, h - menuBarOffset,
+	};
+	SDL_RenderSetViewport(m_pRenderer, &viewport);
+
+	m_pCanvasRenderer->updateWindowSize(w, h - menuBarOffset);
 
 	SDL_SetRenderDrawColor(m_pRenderer, 0, 0, 0, 0xff);
 	SDL_RenderClear(m_pRenderer);

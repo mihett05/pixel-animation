@@ -33,7 +33,7 @@ void Canvas::update()
 		0, 0,
 		getWidth(), getHeight()
 	};;
-	SDL_FillRect(m_pSurface, &fill, SDL_MapRGB(m_pSurface->format, 255, 255, 255));
+	SDL_FillRect(m_pSurface, &fill, SDL_MapRGBA(m_pSurface->format, 255, 255, 255, 0));
 	/*unsigned int* ptr = (unsigned int*)m_pSurface->pixels;
 	for (int x = 0; x < m_pSurface->w; x++) {
 		for (int y = 0; y < m_pSurface->h; y++) {

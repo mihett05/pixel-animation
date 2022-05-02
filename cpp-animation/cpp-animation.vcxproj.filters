@@ -54,10 +54,10 @@
     <ClCompile Include="Interface.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Settings.cpp">
+    <ClCompile Include="Saver.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Saver.cpp">
+    <ClCompile Include="Settings.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
@@ -105,6 +105,9 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Saver.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="constants.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

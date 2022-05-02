@@ -29,6 +29,6 @@ void Saver::save(vector<Canvas*>& frames, int frameWidth, int frameHeight)
 		};
 		SDL_BlitSurface(frames[i]->m_pSurface, nullptr, resultSurface, &dest);
 	}
-	
+	IMG_SavePNG(resultSurface, "test.png");
 	SDL_FreeSurface(resultSurface);
 }

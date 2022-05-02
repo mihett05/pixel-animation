@@ -4,11 +4,10 @@
 #include <SDL_image.h>
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include "Canvas.h"
-#include "Vector.h"
-#include "CanvasRenderer.h"
-#include "Settings.h"
+
 
 class Saver
 {

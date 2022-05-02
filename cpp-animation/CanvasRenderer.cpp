@@ -26,7 +26,7 @@ Vector<double> CanvasRenderer::getCanvasCoords(int x, int y)
 
 	return {
 		x / coeff,
-		y / coeff,
+		(y - menuBarOffset) / coeff,
 	};
 }
 
@@ -55,11 +55,10 @@ void CanvasRenderer::renderCanvas()
 
 	SDL_Texture* t = SDL_CreateTextureFromSurface(m_pRenderer, canvas()->m_pSurface);
 
-	int width = origCoeff * canvas()->getWidth();
-	int height = origCoeff * canvas()->getHeight();
+	auto size = getSizeInWindow();
 	SDL_Rect copyRect = {
 		0, 0,
-		width, height,
+		size.x, size.y,
 	};
 
 	auto blockSize = getSizeOfBlock();
@@ -87,14 +86,13 @@ void CanvasRenderer::renderGrid()
 	double coeff = getCoeff();
 
 	auto block = getSizeOfBlock();
-	int width = origCoeff * canvas()->getWidth();
-	int height = origCoeff * canvas()->getHeight();
+	auto size = getSizeInWindow();
 
 	for (size_t i = 1; i <= block.x; i++)
-		SDL_RenderDrawLineF(m_pRenderer, i * coeff, 0, i * coeff, width - 1);
+		SDL_RenderDrawLineF(m_pRenderer, i * coeff, 0, i * coeff, size.x - 1);
 
 	for (size_t i = 1; i <= block.y; i++)
-		SDL_RenderDrawLineF(m_pRenderer, 0, i * coeff, height - 1, i * coeff);
+		SDL_RenderDrawLineF(m_pRenderer, 0, i * coeff, size.y - 1, i * coeff);
 	SDL_SetRenderDrawColor(m_pRenderer, 0, 0, 0, 255);
 }
 
@@ -102,15 +100,15 @@ void CanvasRenderer::renderMinimap()
 {
 	double origCoeff = getOriginalCoeff();
 
-	int canvasWidth = origCoeff * canvas()->getWidth();
-	int mapSize = (m_winWidth - canvasWidth);
+	auto size = getSizeInWindow();
+	int mapSize = (m_winWidth - size.x);
 	if (mapSize > m_winHeight / 2)
 		mapSize /= 2;
 	double mapCoeff = double(mapSize) / canvas()->getWidth();
 	if (mapSize > 0)
 	{
 		SDL_Rect copyRect = {
-			canvasWidth, 0,
+			size.x, 0,
 			mapSize, mapSize,
 		};
 
@@ -124,7 +122,7 @@ void CanvasRenderer::renderMinimap()
 		auto offset = getOffset();
 
 		SDL_Rect zoomAreaRect = {
-			canvasWidth + offset.x * mapCoeff, offset.y * mapCoeff,
+			size.x + offset.x * mapCoeff, offset.y * mapCoeff,
 			zoomSize, zoomSize
 		};
 		SDL_SetRenderDrawColor(m_pRenderer, 255, 255, 255, 255);
@@ -138,16 +136,16 @@ void CanvasRenderer::renderPrevious()
 	{
 		Canvas* prevCanvas = m_frames[m_currentFrame - 1];
 		double origCoeff = getOriginalCoeff();
-		int canvasWidth = origCoeff * prevCanvas->getWidth();
+		auto size = getSizeInWindow();
 
-		int mapSize = (m_winWidth - canvasWidth);
+		int mapSize = (m_winWidth - size.x);
 		if (mapSize > m_winHeight / 2)
 			mapSize /= 2;
 
 		if (mapSize > 0)
 		{
 			SDL_Rect copyRect = {
-				canvasWidth, mapSize - 1,
+				size.x, mapSize - 1,
 				mapSize, mapSize,
 			};
 
@@ -216,8 +214,8 @@ void CanvasRenderer::update(SDL_Event& e)
 	else if (e.type == SDL_MOUSEBUTTONUP)
 		m_isMousePressed = false;
 
-	bool isInsideX = e.motion.x >= 0 && e.motion.x < canvas()->getWidth()* origCoeff;
-	bool isInsideY = e.motion.y >= 0 && e.motion.y < canvas()->getHeight()* origCoeff;
+	bool isInsideX = e.motion.x >= 0 && e.motion.x < canvas()->getWidth() * origCoeff + menuBarOffset;
+	bool isInsideY = e.motion.y >= 0 && e.motion.y < canvas()->getHeight() * origCoeff + menuBarOffset;
 	
 	bool isCaptured = ImGui::IsWindowHovered(ImGuiFocusedFlags_AnyWindow) || ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow);
 	if (isInsideX && isInsideY && !isCaptured)
@@ -288,8 +286,23 @@ void CanvasRenderer::update(SDL_Event& e)
 	
 }
 
+void CanvasRenderer::save(Saver* saver)
+{
+	saver->save(m_frames, m_width, m_height);
+}
+
 size_t CanvasRenderer::getFramesCount()
 {
 	return m_frames.size();
+}
+
+Vector<int> CanvasRenderer::getSizeInWindow()
+{
+	double origCoeff = getOriginalCoeff();
+	int width = origCoeff * canvas()->getWidth();
+	int height = origCoeff * canvas()->getHeight();
+	return {
+		width, height
+	};
 }
 
