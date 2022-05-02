@@ -25,7 +25,7 @@ void Interface::renderBrush()
 {
 	ImGui::SetNextWindowPos({ 0, 0 }, ImGuiCond_FirstUseEver);
 	ImGui::Begin("Brush");
-	ImGui::ColorPicker3("Color", m_pSettings->color);
+	ImGui::ColorPicker4("Color", m_pSettings->color, ImGuiColorEditFlags_AlphaBar);
 	ImGui::End();
 }
 
@@ -137,6 +137,5 @@ void Interface::render()
 
 void Interface::update(SDL_Event& e)
 {
-	
 	render();
 }

@@ -6,7 +6,7 @@ struct Settings
 public:
 	int zoom = 1;
 	int maxZoom = 8;
-	float color[3] = {0, 0, 0};
+	float color[4] = {0, 0, 0, 1};
 
 	bool previousMap = true;
 	bool previousAlpha = true;

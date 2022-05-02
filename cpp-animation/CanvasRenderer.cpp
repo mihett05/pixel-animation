@@ -30,7 +30,6 @@ void pushAnimation(Settings* settings)
 	settings->lastTimerId = SDL_AddTimer((33 / 10) * 50 * settings->delay, animationCallback, settings);
 }
 
-
 Vector<double> CanvasRenderer::getSizeOfBlock()
 {
 	return {
@@ -137,7 +136,7 @@ void CanvasRenderer::renderCanvas(Canvas* c, bool checkPrev)
 	};
 	renderBackground(copyRect);
 
-	bool isPrevAvailable = checkPrev && m_pSettings->previousAlpha && m_currentFrame - 1 >= 0;
+	bool isPrevAvailable = !m_pSettings->isAnimating && checkPrev && m_pSettings->previousAlpha && m_currentFrame - 1 >= 0;
 	double origCoeff = getOriginalCoeff();
 
 	SDL_Texture* t = SDL_CreateTextureFromSurface(m_pRenderer, c->m_pSurface);
@@ -269,6 +268,7 @@ void CanvasRenderer::recreate(int w, int h)
 	m_currentFrame = 0;
 
 	m_pSettings->zoom = 1;
+	m_pSettings->isAnimating = false;
 	m_offsetX = 0;
 	m_offsetY = 0;
 }
@@ -331,7 +331,8 @@ void CanvasRenderer::update(SDL_Event& e)
 				coords.y + offset.y,
 				Uint8(m_pSettings->color[0] * 255),
 				Uint8(m_pSettings->color[1] * 255),
-				Uint8(m_pSettings->color[2] * 255)
+				Uint8(m_pSettings->color[2] * 255),
+				Uint8(m_pSettings->color[3] * 255)
 			);
 		}
 
@@ -343,7 +344,8 @@ void CanvasRenderer::update(SDL_Event& e)
 				coords.y + offset.y,
 				Uint8(m_pSettings->color[0] * 255),
 				Uint8(m_pSettings->color[1] * 255),
-				Uint8(m_pSettings->color[2] * 255)
+				Uint8(m_pSettings->color[2] * 255),
+				Uint8(m_pSettings->color[3] * 255)
 			);
 		}
 

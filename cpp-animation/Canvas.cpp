@@ -51,18 +51,18 @@ void Canvas::setPixel(size_t x, size_t y, SDL_Color color)
 {
     SDL_Rect pixel = { x, y, 1, 1 };
     
-    SDL_FillRect(m_pSurface, &pixel, SDL_MapRGB(m_pSurface->format, color.r, color.g, color.b));
+    SDL_FillRect(m_pSurface, &pixel, SDL_MapRGBA(m_pSurface->format, color.r, color.g, color.b, color.a));
 }
 
-void Canvas::setPixel(size_t x, size_t y, uint8_t r, uint8_t g, uint8_t b)
+void Canvas::setPixel(size_t x, size_t y, uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
     SDL_Rect pixel = { x, y, 1, 1 };
-    SDL_FillRect(m_pSurface, &pixel, SDL_MapRGB(m_pSurface->format, r, g, b));
+    SDL_FillRect(m_pSurface, &pixel, SDL_MapRGBA(m_pSurface->format, r, g, b, a));
 }
 
 void Canvas::setRect(SDL_Rect& rect, SDL_Color color)
 {
-	SDL_FillRect(m_pSurface, &rect, SDL_MapRGB(m_pSurface->format, color.r, color.g, color.b));
+	SDL_FillRect(m_pSurface, &rect, SDL_MapRGBA(m_pSurface->format, color.r, color.g, color.b, color.a));
 }
 
 
