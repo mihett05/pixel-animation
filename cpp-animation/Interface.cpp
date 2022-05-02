@@ -34,6 +34,8 @@ void Interface::renderFrames()
 	int currentFrame = m_pRenderer->m_currentFrame + 1;
 	ImGui::SetNextWindowPos({ 0, 0 }, ImGuiCond_FirstUseEver);
 	ImGui::Begin("Frames");
+	ImGui::BeginDisabled(m_pSettings->isAnimating);
+
 	if (ImGui::SliderInt("Frame", &currentFrame, 1, m_pRenderer->getFramesCount()))
 		m_pRenderer->m_currentFrame = currentFrame - 1;
 	if (ImGui::Button("Create new frame"))
@@ -60,6 +62,30 @@ void Interface::renderFrames()
 	ImGui::Checkbox("Enable previous alpha", &m_pSettings->previousAlpha);
 
 	ImGui::SliderInt("Prev alpha", &m_pSettings->alpha, 0, 255);
+
+	ImGui::EndDisabled();
+	ImGui::End();
+}
+
+void Interface::renderAnimation()
+{
+	ImGui::SetNextWindowPos({ 0, 0 }, ImGuiCond_FirstUseEver);
+	ImGui::Begin("Animation");
+
+	if (m_pRenderer->getFramesCount() == 1)
+		ImGui::Text("Can't animate only with 1 frame");
+
+	ImGui::BeginDisabled(m_pRenderer->getFramesCount() == 1);
+
+	ImGui::SliderInt("Delay", &m_pSettings->delay, 1, 10);
+
+	if (ImGui::Button("Start/Stop"))
+	{
+		m_pSettings->isAnimating = !m_pSettings->isAnimating;
+		pushAnimation(m_pSettings);
+	}
+
+	ImGui::EndDisabled();
 
 	ImGui::End();
 }
@@ -102,6 +128,7 @@ void Interface::render()
 	renderMenu();
 	renderBrush();
 	renderFrames();
+	renderAnimation();
 	// end
 
 	ImGui::Render();
@@ -110,6 +137,6 @@ void Interface::render()
 
 void Interface::update(SDL_Event& e)
 {
-	ImGui_ImplSDL2_ProcessEvent(&e);
+	
 	render();
 }

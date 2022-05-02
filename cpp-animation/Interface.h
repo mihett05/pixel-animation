@@ -26,6 +26,7 @@ private:
 	void renderBrush();
 	void renderMenu();
 	void renderFrames();
+	void renderAnimation();
 	void render();
 public:
 	Interface(Settings* settings, CanvasRenderer* renderer);

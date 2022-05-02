@@ -37,6 +37,7 @@ void App::update(SDL_Event& e)
 	SDL_SetRenderDrawColor(m_pRenderer, 0, 0, 0, 0xff);
 	SDL_RenderClear(m_pRenderer);
 	
+	
 	m_pCanvasRenderer->update(e);
 	m_pInterface->update(e);
 	
@@ -52,9 +53,11 @@ void App::run()
 	{
 		while (SDL_PollEvent(&e) != 0)
 		{	
+			ImGui_ImplSDL2_ProcessEvent(&e);
 			if (e.type == SDL_QUIT || e.type == SDL_KEYDOWN && e.key.keysym.scancode == SDL_SCANCODE_ESCAPE) quit = true;
 			update(e);
 		}
+		//SDL_Delay(10);
 	}
 	destroy();
 }

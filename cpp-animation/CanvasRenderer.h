@@ -14,6 +14,8 @@
 
 using namespace std;
 
+void pushAnimation(Settings* settings);
+
 class CanvasRenderer
 {
 private:
@@ -30,6 +32,8 @@ private:
 
 	int m_offsetX = 0;
 	int m_offsetY = 0;
+
+	Uint64 lastTick = 0;
 
 	Vector<double> getSizeOfBlock();
 
@@ -59,6 +63,7 @@ public:
 	void updateWindowSize(int w, int h);
 	void update(SDL_Event& e);
 
+	void switchAnimation();
 	void save(Saver* saver);
 
 	size_t getFramesCount();

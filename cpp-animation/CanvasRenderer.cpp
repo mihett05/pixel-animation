@@ -1,5 +1,36 @@
 #include "CanvasRenderer.h"
 
+
+Uint32 animationCallback(Uint32 interval, void* param)
+{
+	Settings* settings = (Settings*)param;
+
+	if (settings->isAnimating)
+	{
+		SDL_Event e;
+		SDL_UserEvent userEvent;
+
+		userEvent.type = SDL_USEREVENT;
+		userEvent.code = 0;
+		userEvent.data1 = nullptr;
+		userEvent.data2 = nullptr;
+
+		e.type = SDL_USEREVENT;
+		e.user = userEvent;
+
+		SDL_PushEvent(&e);
+	}
+
+	return interval;
+}
+
+void pushAnimation(Settings* settings)
+{ 
+	SDL_RemoveTimer(settings->lastTimerId);
+	settings->lastTimerId = SDL_AddTimer((33 / 10) * 50 * settings->delay, animationCallback, settings);
+}
+
+
 Vector<double> CanvasRenderer::getSizeOfBlock()
 {
 	return {
@@ -95,7 +126,6 @@ void CanvasRenderer::renderBackground(SDL_Rect& rect)
 			SDL_RenderCopyF(m_pRenderer, t, nullptr, &copyRect);
 		}
 	}
-	
 }
 
 void CanvasRenderer::renderCanvas(Canvas* c, bool checkPrev)
@@ -215,7 +245,7 @@ void CanvasRenderer::render()
 {
 	renderCanvas(canvas(), true);
 	renderGrid();
-	if (m_pSettings->previousMap)
+	if (!m_pSettings->isAnimating && m_pSettings->previousMap)
 		renderPrevious();
 	renderMinimap();
 	
@@ -262,7 +292,25 @@ void CanvasRenderer::update(SDL_Event& e)
 	auto block = getSizeOfBlock();
 	auto offset = getOffset();
 
+	
+	
+	if (m_pSettings->isAnimating)
+	{
+		if (e.type == SDL_USEREVENT && e.user.code == 0)
+			pushAnimation(m_pSettings); // update doesn't work without lots of events
+
+		
+		if (SDL_GetTicks() - lastTick > (33 / 10) * 100 * m_pSettings->delay)
+		{
+			lastTick = SDL_GetTicks64();
+			m_currentFrame = (m_currentFrame + 1) % getFramesCount();
+		}
+	}
+
 	render();
+
+	if (m_pSettings->isAnimating)
+		return; // to doesn't interact while animation
 
 	if (e.type == SDL_MOUSEBUTTONDOWN)
 		m_isMousePressed = true;
@@ -339,6 +387,12 @@ void CanvasRenderer::update(SDL_Event& e)
 		else if (keyWasPressed(e, SDL_SCANCODE_RIGHT) && remainsX >= 0) m_offsetX += shift;
 	}
 	
+}
+
+void CanvasRenderer::switchAnimation()
+{
+	lastTick = SDL_GetTicks64();
+	m_pSettings->isAnimating = !m_pSettings->isAnimating;
 }
 
 void CanvasRenderer::save(Saver* saver)

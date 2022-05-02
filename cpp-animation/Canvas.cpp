@@ -32,7 +32,7 @@ void Canvas::update()
 	SDL_Rect fill = {
 		0, 0,
 		getWidth(), getHeight()
-	};;
+	};
 	SDL_FillRect(m_pSurface, &fill, SDL_MapRGBA(m_pSurface->format, 255, 255, 255, 0));
 	/*unsigned int* ptr = (unsigned int*)m_pSurface->pixels;
 	for (int x = 0; x < m_pSurface->w; x++) {
