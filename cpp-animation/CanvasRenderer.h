@@ -2,10 +2,9 @@
 
 #include <SDL.h>
 #include <iostream>
+#include <vector>
 
 #include "imgui.h"
-#include "imgui_impl_sdl.h"
-#include "imgui_impl_sdlrenderer.h"
 
 #include "Canvas.h"
 #include "Vector.h"
@@ -17,7 +16,9 @@ class CanvasRenderer
 {
 private:
 	SDL_Renderer* m_pRenderer;
-	Canvas* m_pCanvas;
+	vector<Canvas*> m_frames;
+	size_t m_width = 32;
+	size_t m_height = 32;
 	Settings* m_pSettings;
 
 	size_t m_winWidth = 0;
@@ -40,13 +41,19 @@ private:
 	void renderCanvas();
 	void renderGrid();
 	void renderMinimap();
+	void renderPrevious();
 	void render();
 
 public:
 	CanvasRenderer(Settings* settings, SDL_Renderer* renderer, size_t w, size_t h);
+	int m_currentFrame = 0;
 
 	void recreate(int w, int h);
+	void newFrame();
+
 	void updateWindowSize(int w, int h);
 	void update(SDL_Event& e);
+
+	size_t getFramesCount();
 };
 

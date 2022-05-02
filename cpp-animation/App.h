@@ -3,10 +3,6 @@
 #include <SDL.h>
 #include <iostream>
 
-#include "imgui.h"
-#include "imgui_impl_sdl.h"
-#include "imgui_impl_sdlrenderer.h"
-
 #include "Canvas.h"
 #include "Vector.h"
 #include "CanvasRenderer.h"

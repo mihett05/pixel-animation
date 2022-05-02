@@ -45,14 +45,16 @@ bool CanvasRenderer::keyWasPressed(SDL_Event& e, SDL_Scancode s)
 
 Canvas* CanvasRenderer::canvas()
 {
-	return m_pCanvas;
+	return m_frames[m_currentFrame];
 }
 
 void CanvasRenderer::renderCanvas()
 {
+	bool isPrevAvailable = m_pSettings->previousAlpha && m_currentFrame - 1 >= 0;
 	double origCoeff = getOriginalCoeff();
 
 	SDL_Texture* t = SDL_CreateTextureFromSurface(m_pRenderer, canvas()->m_pSurface);
+
 	int width = origCoeff * canvas()->getWidth();
 	int height = origCoeff * canvas()->getHeight();
 	SDL_Rect copyRect = {
@@ -61,7 +63,6 @@ void CanvasRenderer::renderCanvas()
 	};
 
 	auto blockSize = getSizeOfBlock();
-
 	auto offset = getOffset();
 
 	SDL_Rect zoomRect = {
@@ -70,6 +71,13 @@ void CanvasRenderer::renderCanvas()
 		blockSize.y
 	};
 	SDL_RenderCopy(m_pRenderer, t, &zoomRect, &copyRect);
+	if (isPrevAvailable)
+	{
+		Canvas* prevCanvas = m_frames[m_currentFrame - 1];
+		SDL_Texture* prev = SDL_CreateTextureFromSurface(m_pRenderer, prevCanvas->m_pSurface);
+		SDL_SetTextureAlphaMod(prev, m_pSettings->alpha);
+		SDL_RenderCopy(m_pRenderer, prev, &zoomRect, &copyRect);
+	}
 }
 
 void CanvasRenderer::renderGrid()
@@ -95,8 +103,9 @@ void CanvasRenderer::renderMinimap()
 	double origCoeff = getOriginalCoeff();
 
 	int canvasWidth = origCoeff * canvas()->getWidth();
-	int canvasHeight = origCoeff * canvas()->getHeight();
 	int mapSize = (m_winWidth - canvasWidth);
+	if (mapSize > m_winHeight / 2)
+		mapSize /= 2;
 	double mapCoeff = double(mapSize) / canvas()->getWidth();
 	if (mapSize > 0)
 	{
@@ -123,26 +132,68 @@ void CanvasRenderer::renderMinimap()
 	}
 }
 
+void CanvasRenderer::renderPrevious()
+{
+	if (m_currentFrame - 1 >= 0)
+	{
+		Canvas* prevCanvas = m_frames[m_currentFrame - 1];
+		double origCoeff = getOriginalCoeff();
+		int canvasWidth = origCoeff * prevCanvas->getWidth();
+
+		int mapSize = (m_winWidth - canvasWidth);
+		if (mapSize > m_winHeight / 2)
+			mapSize /= 2;
+
+		if (mapSize > 0)
+		{
+			SDL_Rect copyRect = {
+				canvasWidth, mapSize - 1,
+				mapSize, mapSize,
+			};
+
+			SDL_Texture* t = SDL_CreateTextureFromSurface(m_pRenderer, prevCanvas->m_pSurface);
+			SDL_RenderCopy(m_pRenderer, t, nullptr, &copyRect);
+
+			SDL_SetRenderDrawColor(m_pRenderer, 32, 32, 32, 255);
+			SDL_RenderDrawRect(m_pRenderer, &copyRect);
+		}
+	}
+}
+
 void CanvasRenderer::render()
 {
 	renderCanvas();
 	renderGrid();
 	renderMinimap();
+	if (m_pSettings->previousMap)
+		renderPrevious();
 }
 
 CanvasRenderer::CanvasRenderer(Settings* settings, SDL_Renderer* renderer, size_t w, size_t h) 
 	: m_pSettings(settings), m_pRenderer(renderer), m_winWidth(w), m_winHeight(h)
 {
-	m_pCanvas = new Canvas(32, 32);
+	m_frames.reserve(32);
+	m_frames.push_back(new Canvas(m_width, m_height));
 }
 
 void CanvasRenderer::recreate(int w, int h)
 {
-	delete m_pCanvas;
-	m_pCanvas = new Canvas(w, h);
+	m_width = w;
+	m_height = h;
+
+	m_frames.clear();
+	m_frames.push_back(new Canvas(m_width, m_height));
+	m_currentFrame = 0;
+
 	m_pSettings->zoom = 1;
 	m_offsetX = 0;
 	m_offsetY = 0;
+}
+
+void CanvasRenderer::newFrame()
+{
+	m_frames.push_back(new Canvas(m_width, m_height));
+	++m_currentFrame;
 }
 
 void CanvasRenderer::updateWindowSize(int w, int h)
@@ -236,3 +287,9 @@ void CanvasRenderer::update(SDL_Event& e)
 	}
 	
 }
+
+size_t CanvasRenderer::getFramesCount()
+{
+	return m_frames.size();
+}
+

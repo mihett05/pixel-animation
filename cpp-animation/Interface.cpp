@@ -28,6 +28,41 @@ void Interface::renderBrush()
 	ImGui::End();
 }
 
+void Interface::renderFrames()
+{
+	int currentFrame = m_pRenderer->m_currentFrame + 1;
+	ImGui::SetNextWindowPos({ 0, 0 }, ImGuiCond_FirstUseEver);
+	ImGui::Begin("Frames");
+	if (ImGui::SliderInt("Frame", &currentFrame, 1, m_pRenderer->getFramesCount()))
+		m_pRenderer->m_currentFrame = currentFrame - 1;
+	if (ImGui::Button("Create new frame"))
+		m_pRenderer->newFrame();
+
+	bool previusEnabled = m_pRenderer->m_currentFrame - 1 >= 0;
+	bool nextEnabled = m_pRenderer->m_currentFrame + 1 < m_pRenderer->getFramesCount();
+
+
+	// next/prev buttons
+	ImGui::BeginDisabled(!previusEnabled);
+	if (ImGui::Button("<< Prev") && previusEnabled)
+		--m_pRenderer->m_currentFrame;
+	ImGui::EndDisabled();
+
+	ImGui::SameLine();
+
+	ImGui::BeginDisabled(!nextEnabled);
+	if (ImGui::Button(">> Next") && nextEnabled)
+		++m_pRenderer->m_currentFrame;
+	ImGui::EndDisabled();
+
+	ImGui::Checkbox("Enable previous map", &m_pSettings->previousMap);
+	ImGui::Checkbox("Enable previous alpha", &m_pSettings->previousAlpha);
+
+	ImGui::SliderInt("Previous alpha", &m_pSettings->alpha, 0, 255);
+
+	ImGui::End();
+}
+
 void Interface::renderMenu()
 {
 	static string sizes[] = {"8x8", "16x16", "24x24", "32x32", "48x48", "64x64"};
@@ -63,6 +98,7 @@ void Interface::render()
 	// start
 	renderMenu();
 	renderBrush();
+	renderFrames();
 	// end
 
 	ImGui::Render();

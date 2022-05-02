@@ -29,7 +29,12 @@ Canvas::~Canvas()
 
 void Canvas::update()
 {
-	unsigned int* ptr = (unsigned int*)m_pSurface->pixels;
+	SDL_Rect fill = {
+		0, 0,
+		getWidth(), getHeight()
+	};;
+	SDL_FillRect(m_pSurface, &fill, SDL_MapRGB(m_pSurface->format, 255, 255, 255));
+	/*unsigned int* ptr = (unsigned int*)m_pSurface->pixels;
 	for (int x = 0; x < m_pSurface->w; x++) {
 		for (int y = 0; y < m_pSurface->h; y++) {
 			int xr = 255 * x / m_pSurface->w;
@@ -38,7 +43,7 @@ void Canvas::update()
 			// int Pixel = x * screen->format->BytesPerPixel;
 			ptr[row + x] = SDL_MapRGBA(m_pSurface->format, xr, 255 - yr, 255 - xr, 255);
 		}
-	}
+	}*/
 }
 
 
