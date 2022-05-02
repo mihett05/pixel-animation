@@ -59,7 +59,7 @@ void Interface::renderFrames()
 	ImGui::Checkbox("Enable previous map", &m_pSettings->previousMap);
 	ImGui::Checkbox("Enable previous alpha", &m_pSettings->previousAlpha);
 
-	ImGui::SliderInt("Previous alpha", &m_pSettings->alpha, 0, 255);
+	ImGui::SliderInt("Prev alpha", &m_pSettings->alpha, 0, 255);
 
 	ImGui::End();
 }

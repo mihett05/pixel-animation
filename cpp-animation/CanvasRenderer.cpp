@@ -48,18 +48,69 @@ Canvas* CanvasRenderer::canvas()
 	return m_frames[m_currentFrame];
 }
 
-void CanvasRenderer::renderCanvas()
+void CanvasRenderer::createBackground()
 {
-	bool isPrevAvailable = m_pSettings->previousAlpha && m_currentFrame - 1 >= 0;
-	double origCoeff = getOriginalCoeff();
+	m_pBackgroundCanvas = new Canvas(2, 2);
 
-	SDL_Texture* t = SDL_CreateTextureFromSurface(m_pRenderer, canvas()->m_pSurface);
+	SDL_Rect microRect = {
+		0, 0,
+		1, 1
+	};
+	SDL_Color color = { 0, 0, 0, 255 };
 
+	for (int y = 0; y < m_pBackgroundCanvas->getHeight(); ++y)
+	{
+		int k = y % 2 != 0; // offset for odd rows
+		for (int x = 0; x < m_pBackgroundCanvas->getWidth(); ++x)
+		{
+			if (k % 2 == 0)
+				color = { 221, 221, 221, 255 };
+			else
+				color = { 255, 255, 255, 255 };
+			m_pBackgroundCanvas->setRect(microRect, color);
+			++k;
+			microRect.x += 1;
+		}
+		microRect.x = 0;
+		microRect.y += 1;
+	}
+}
+
+void CanvasRenderer::renderBackground(SDL_Rect& rect)
+{
+	double coeff = double(rect.w) / canvas()->getWidth();
+	SDL_Texture* t = SDL_CreateTextureFromSurface(m_pRenderer, m_pBackgroundCanvas->m_pSurface);
+
+	auto size = getSizeInWindow();
+	SDL_FRect copyRect = {
+		rect.x, rect.y,
+		coeff, coeff,
+	};
+	for (int y = 0; y < canvas()->getHeight(); ++y)
+	{
+		for (int x = 0; x < canvas()->getWidth(); ++x)
+		{
+			copyRect.x = coeff * x + rect.x;
+			copyRect.y = coeff * y + rect.y;
+			SDL_RenderCopyF(m_pRenderer, t, nullptr, &copyRect);
+		}
+	}
+	
+}
+
+void CanvasRenderer::renderCanvas(Canvas* c, bool checkPrev)
+{
 	auto size = getSizeInWindow();
 	SDL_Rect copyRect = {
 		0, 0,
 		size.x, size.y,
 	};
+	renderBackground(copyRect);
+
+	bool isPrevAvailable = checkPrev && m_pSettings->previousAlpha && m_currentFrame - 1 >= 0;
+	double origCoeff = getOriginalCoeff();
+
+	SDL_Texture* t = SDL_CreateTextureFromSurface(m_pRenderer, c->m_pSurface);
 
 	auto blockSize = getSizeOfBlock();
 	auto offset = getOffset();
@@ -111,6 +162,7 @@ void CanvasRenderer::renderMinimap()
 			size.x, 0,
 			mapSize, mapSize,
 		};
+		renderBackground(copyRect);
 
 		SDL_Texture* t = SDL_CreateTextureFromSurface(m_pRenderer, canvas()->m_pSurface);
 		SDL_RenderCopy(m_pRenderer, t, nullptr, &copyRect);
@@ -148,6 +200,7 @@ void CanvasRenderer::renderPrevious()
 				size.x, mapSize - 1,
 				mapSize, mapSize,
 			};
+			renderBackground(copyRect);
 
 			SDL_Texture* t = SDL_CreateTextureFromSurface(m_pRenderer, prevCanvas->m_pSurface);
 			SDL_RenderCopy(m_pRenderer, t, nullptr, &copyRect);
@@ -160,11 +213,12 @@ void CanvasRenderer::renderPrevious()
 
 void CanvasRenderer::render()
 {
-	renderCanvas();
+	renderCanvas(canvas(), true);
 	renderGrid();
-	renderMinimap();
 	if (m_pSettings->previousMap)
 		renderPrevious();
+	renderMinimap();
+	
 }
 
 CanvasRenderer::CanvasRenderer(Settings* settings, SDL_Renderer* renderer, size_t w, size_t h) 
@@ -172,6 +226,7 @@ CanvasRenderer::CanvasRenderer(Settings* settings, SDL_Renderer* renderer, size_
 {
 	m_frames.reserve(32);
 	m_frames.push_back(new Canvas(m_width, m_height));
+	createBackground();
 }
 
 void CanvasRenderer::recreate(int w, int h)
@@ -214,7 +269,7 @@ void CanvasRenderer::update(SDL_Event& e)
 	else if (e.type == SDL_MOUSEBUTTONUP)
 		m_isMousePressed = false;
 
-	bool isInsideX = e.motion.x >= 0 && e.motion.x < canvas()->getWidth() * origCoeff + menuBarOffset;
+	bool isInsideX = e.motion.x >= 0 && e.motion.x < canvas()->getWidth() * origCoeff;
 	bool isInsideY = e.motion.y >= 0 && e.motion.y < canvas()->getHeight() * origCoeff + menuBarOffset;
 	
 	bool isCaptured = ImGui::IsWindowHovered(ImGuiFocusedFlags_AnyWindow) || ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow);

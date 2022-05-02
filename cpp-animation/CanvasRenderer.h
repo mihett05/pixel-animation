@@ -19,6 +19,7 @@ class CanvasRenderer
 private:
 	SDL_Renderer* m_pRenderer;
 	vector<Canvas*> m_frames;
+	Canvas* m_pBackgroundCanvas;
 	size_t m_width = 32;
 	size_t m_height = 32;
 	Settings* m_pSettings;
@@ -39,8 +40,10 @@ private:
 	bool keyWasPressed(SDL_Event& e, SDL_Scancode key);
 
 	Canvas* canvas(); // to get current canvas
+	void createBackground();
 
-	void renderCanvas();
+	void renderBackground(SDL_Rect& rect);
+	void renderCanvas(Canvas* c, bool checkPrev = false);
 	void renderGrid();
 	void renderMinimap();
 	void renderPrevious();

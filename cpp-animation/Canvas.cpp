@@ -60,6 +60,12 @@ void Canvas::setPixel(size_t x, size_t y, uint8_t r, uint8_t g, uint8_t b)
     SDL_FillRect(m_pSurface, &pixel, SDL_MapRGB(m_pSurface->format, r, g, b));
 }
 
+void Canvas::setRect(SDL_Rect& rect, SDL_Color color)
+{
+	SDL_FillRect(m_pSurface, &rect, SDL_MapRGB(m_pSurface->format, color.r, color.g, color.b));
+}
+
+
 size_t Canvas::getWidth()
 {
 	return m_pSurface->w;
