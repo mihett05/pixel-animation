@@ -106,6 +106,30 @@ void CanvasRenderer::createBackground()
 	}
 }
 
+void CanvasRenderer::actOnCanvas(size_t x, size_t y)
+{
+	auto coords = getCanvasCoords(x, y);
+	auto offset = getOffset();
+
+	SDL_Color color = {
+		255, 255, 255, 0
+	};
+
+	if (m_pSettings->tool == DrawTool::brush)
+		color = {
+			Uint8(m_pSettings->color[0] * 255),
+			Uint8(m_pSettings->color[1] * 255),
+			Uint8(m_pSettings->color[2] * 255),
+			Uint8(m_pSettings->color[3] * 255)
+		};
+
+	canvas()->setPixel(
+		coords.x + offset.x,
+		coords.y + offset.y,
+		color
+	);
+}
+
 void CanvasRenderer::renderBackground(SDL_Rect& rect)
 {
 	double coeff = double(rect.w) / canvas()->getWidth();
@@ -282,6 +306,18 @@ void CanvasRenderer::newFrame()
 	++m_currentFrame;
 }
 
+void CanvasRenderer::deleteFrame()
+{
+	if (getFramesCount() - 1 > 0)
+	{
+		size_t frameToDelete = m_currentFrame;
+		delete m_frames[frameToDelete];
+		m_frames.erase(m_frames.begin() + frameToDelete);
+		if (m_currentFrame != 0)
+			--m_currentFrame;
+	}
+}
+
 void CanvasRenderer::updateWindowSize(int w, int h)
 {
 	m_winWidth = w;
@@ -323,31 +359,8 @@ void CanvasRenderer::update(SDL_Event& e)
 	bool isCaptured = ImGui::IsWindowHovered(ImGuiFocusedFlags_AnyWindow) || ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow);
 	if (isInsideX && isInsideY && !isCaptured)
 	{
-		if (e.type == SDL_MOUSEBUTTONDOWN)
-		{
-			auto coords = getCanvasCoords(e.motion.x, e.motion.y);
-			canvas()->setPixel(
-				coords.x + offset.x,
-				coords.y + offset.y,
-				Uint8(m_pSettings->color[0] * 255),
-				Uint8(m_pSettings->color[1] * 255),
-				Uint8(m_pSettings->color[2] * 255),
-				Uint8(m_pSettings->color[3] * 255)
-			);
-		}
-
-		if (e.type == SDL_MOUSEMOTION && m_isMousePressed)
-		{
-			auto coords = getCanvasCoords(e.motion.x, e.motion.y);
-			canvas()->setPixel(
-				coords.x + offset.x,
-				coords.y + offset.y,
-				Uint8(m_pSettings->color[0] * 255),
-				Uint8(m_pSettings->color[1] * 255),
-				Uint8(m_pSettings->color[2] * 255),
-				Uint8(m_pSettings->color[3] * 255)
-			);
-		}
+		if (e.type == SDL_MOUSEBUTTONDOWN || (e.type == SDL_MOUSEMOTION && m_isMousePressed))
+			actOnCanvas(e.motion.x, e.motion.y);
 
 		if (e.type == SDL_MOUSEMOTION)
 		{

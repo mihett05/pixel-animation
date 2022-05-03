@@ -46,6 +46,8 @@ private:
 	Canvas* canvas(); // to get current canvas
 	void createBackground();
 
+	void actOnCanvas(size_t x, size_t y);
+
 	void renderBackground(SDL_Rect& rect);
 	void renderCanvas(Canvas* c, bool checkPrev = false);
 	void renderGrid();
@@ -59,6 +61,7 @@ public:
 
 	void recreate(int w, int h);
 	void newFrame();
+	void deleteFrame();
 
 	void updateWindowSize(int w, int h);
 	void update(SDL_Event& e);

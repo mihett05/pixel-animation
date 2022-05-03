@@ -24,7 +24,7 @@ private:
 	Settings* m_pSettings;
 	Saver* m_pSaver;
 
-	void renderBrush();
+	void renderTool();
 	void renderMenu();
 	void renderFrames();
 	void renderAnimation();

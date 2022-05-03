@@ -21,11 +21,20 @@ void Interface::init(SDL_Window* win, SDL_Renderer* renderer, int w, int h)
 	ImGui_ImplSDLRenderer_Init(renderer);
 }
 
-void Interface::renderBrush()
+void Interface::renderTool()
 {
 	ImGui::SetNextWindowPos({ 0, 0 }, ImGuiCond_FirstUseEver);
-	ImGui::Begin("Brush");
+	ImGui::SetNextWindowSizeConstraints({240, 240}, {400, 400});
+	ImGui::Begin("Tool");
 	ImGui::ColorPicker4("Color", m_pSettings->color, ImGuiColorEditFlags_AlphaBar);
+
+	if (ImGui::RadioButton("Brush", m_pSettings->tool == DrawTool::brush))
+		m_pSettings->tool = DrawTool::brush;
+
+	ImGui::SameLine();
+	if (ImGui::RadioButton("Eraser", m_pSettings->tool == DrawTool::eraser))
+		m_pSettings->tool = DrawTool::eraser;
+
 	ImGui::End();
 }
 
@@ -33,35 +42,36 @@ void Interface::renderFrames()
 {
 	int currentFrame = m_pRenderer->m_currentFrame + 1;
 	ImGui::SetNextWindowPos({ 0, 0 }, ImGuiCond_FirstUseEver);
+
 	ImGui::Begin("Frames");
 	ImGui::BeginDisabled(m_pSettings->isAnimating);
+		if (ImGui::SliderInt("Frame", &currentFrame, 1, m_pRenderer->getFramesCount()))
+			m_pRenderer->m_currentFrame = currentFrame - 1;
+		if (ImGui::Button("Create new frame"))
+			m_pRenderer->newFrame();
 
-	if (ImGui::SliderInt("Frame", &currentFrame, 1, m_pRenderer->getFramesCount()))
-		m_pRenderer->m_currentFrame = currentFrame - 1;
-	if (ImGui::Button("Create new frame"))
-		m_pRenderer->newFrame();
+		bool previusEnabled = m_pRenderer->m_currentFrame - 1 >= 0;
+		bool nextEnabled = m_pRenderer->m_currentFrame + 1 < m_pRenderer->getFramesCount();
+		// next/prev buttons
+		ImGui::BeginDisabled(!previusEnabled);
+			if (ImGui::Button("<< Prev") && previusEnabled)
+				--m_pRenderer->m_currentFrame;
+		ImGui::EndDisabled();
 
-	bool previusEnabled = m_pRenderer->m_currentFrame - 1 >= 0;
-	bool nextEnabled = m_pRenderer->m_currentFrame + 1 < m_pRenderer->getFramesCount();
+		ImGui::SameLine();
 
+		ImGui::BeginDisabled(!nextEnabled);
+			if (ImGui::Button(">> Next") && nextEnabled)
+				++m_pRenderer->m_currentFrame;
+		ImGui::EndDisabled();
 
-	// next/prev buttons
-	ImGui::BeginDisabled(!previusEnabled);
-	if (ImGui::Button("<< Prev") && previusEnabled)
-		--m_pRenderer->m_currentFrame;
-	ImGui::EndDisabled();
+		ImGui::Checkbox("Enable previous map", &m_pSettings->previousMap);
+		ImGui::Checkbox("Enable previous alpha", &m_pSettings->previousAlpha);
 
-	ImGui::SameLine();
+		ImGui::SliderInt("Prev alpha", &m_pSettings->alpha, 0, 255);
 
-	ImGui::BeginDisabled(!nextEnabled);
-	if (ImGui::Button(">> Next") && nextEnabled)
-		++m_pRenderer->m_currentFrame;
-	ImGui::EndDisabled();
-
-	ImGui::Checkbox("Enable previous map", &m_pSettings->previousMap);
-	ImGui::Checkbox("Enable previous alpha", &m_pSettings->previousAlpha);
-
-	ImGui::SliderInt("Prev alpha", &m_pSettings->alpha, 0, 255);
+		if (ImGui::Button("Delete frame") && m_pRenderer->getFramesCount() - 1 > 0)
+			m_pRenderer->deleteFrame();
 
 	ImGui::EndDisabled();
 	ImGui::End();
@@ -148,7 +158,7 @@ void Interface::render()
 
 	// start
 	renderMenu();
-	renderBrush();
+	renderTool();
 	renderFrames();
 	renderAnimation();
 	// end
