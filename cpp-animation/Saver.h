@@ -8,12 +8,14 @@
 
 #include "Canvas.h"
 
+using namespace std;
 
 class Saver
 {
 public:
 	Saver();
 
-	void save(vector<Canvas*>& frames, int frameWidth, int frameHeight);
+	void save(string fileName, vector<Canvas*>& frames, int frameWidth, int frameHeight);
+	SDL_Surface* load(string fileName);
 };
 

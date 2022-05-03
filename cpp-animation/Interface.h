@@ -7,6 +7,7 @@
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_sdlrenderer.h"
+#include "ImGuiFileDialog.h"
 
 #include "Canvas.h"
 #include "Vector.h"

@@ -1,11 +1,9 @@
 #include "Canvas.h"
 
 
-
-Canvas::Canvas(size_t w, size_t h)
+SDL_Surface* createEmptySurface(int w, int h)
 {
 	Uint32 rmask, gmask, bmask, amask;
-
 	#if SDL_BYTEORDER == SDL_BIG_ENDIAN
 		rmask = 0xff000000;
 		gmask = 0x00ff0000;
@@ -17,9 +15,19 @@ Canvas::Canvas(size_t w, size_t h)
 		bmask = 0x00ff0000;
 		amask = 0xff000000;
 	#endif
-    m_pSurface = SDL_CreateRGBSurface(0, w, h, 32, rmask, gmask, bmask, amask);
-	
+	return SDL_CreateRGBSurface(0, w, h, 32, rmask, gmask, bmask, amask);
+}
+
+
+Canvas::Canvas(size_t w, size_t h)
+{
+	m_pSurface = createEmptySurface(w, h);
 	update();
+}
+
+Canvas::Canvas(SDL_Surface* surface)
+{
+	m_pSurface = surface;
 }
 
 Canvas::~Canvas()
@@ -64,7 +72,6 @@ void Canvas::setRect(SDL_Rect& rect, SDL_Color color)
 {
 	SDL_FillRect(m_pSurface, &rect, SDL_MapRGBA(m_pSurface->format, color.r, color.g, color.b, color.a));
 }
-
 
 size_t Canvas::getWidth()
 {

@@ -110,11 +110,33 @@ void Interface::renderMenu()
 				}
 				ImGui::EndMenu();
 			}
+			
 			if (ImGui::MenuItem("Save"))
-				m_pRenderer->save(m_pSaver);
+			{
+				ImGui::SetNextWindowSize({ 400, 200 });
+				ImGuiFileDialog::Instance()->OpenModal("SaveDialog", "Choose where to save image", ".png", ".");
+			}
+			if (ImGui::MenuItem("Load"))
+			{
+				ImGui::SetNextWindowSize({ 400, 200 });
+				ImGuiFileDialog::Instance()->OpenModal("LoadDialog", "Choose what image to load", ".png", ".");
+			}
 			ImGui::EndMenu();
 		}
 		ImGui::EndMainMenuBar();
+	}
+
+	if (ImGuiFileDialog::Instance()->Display("SaveDialog"))
+	{
+		if (ImGuiFileDialog::Instance()->IsOk())
+			m_pRenderer->save(ImGuiFileDialog::Instance()->GetFilePathName(), m_pSaver);
+		ImGuiFileDialog::Instance()->Close();
+	}
+	if (ImGuiFileDialog::Instance()->Display("LoadDialog"))
+	{
+		if (ImGuiFileDialog::Instance()->IsOk())
+			m_pRenderer->load(ImGuiFileDialog::Instance()->GetFilePathName(), m_pSaver);
+		ImGuiFileDialog::Instance()->Close();
 	}
 }
 

@@ -64,7 +64,8 @@ public:
 	void update(SDL_Event& e);
 
 	void switchAnimation();
-	void save(Saver* saver);
+	void save(string fileName, Saver* saver);
+	void load(string fileName, Saver* saver);
 
 	size_t getFramesCount();
 	Vector<int> getSizeInWindow();

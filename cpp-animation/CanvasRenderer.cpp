@@ -263,6 +263,9 @@ void CanvasRenderer::recreate(int w, int h)
 	m_width = w;
 	m_height = h;
 
+	for (size_t i = 0; i < m_frames.size(); ++i)
+		delete m_frames[i];
+
 	m_frames.clear();
 	m_frames.push_back(new Canvas(m_width, m_height));
 	m_currentFrame = 0;
@@ -291,14 +294,11 @@ void CanvasRenderer::update(SDL_Event& e)
 	double coeff = getCoeff();
 	auto block = getSizeOfBlock();
 	auto offset = getOffset();
-
-	
 	
 	if (m_pSettings->isAnimating)
 	{
 		if (e.type == SDL_USEREVENT && e.user.code == 0)
 			pushAnimation(m_pSettings); // update doesn't work without lots of events
-
 		
 		if (SDL_GetTicks() - lastTick > (33 / 10) * 100 * m_pSettings->delay)
 		{
@@ -397,9 +397,36 @@ void CanvasRenderer::switchAnimation()
 	m_pSettings->isAnimating = !m_pSettings->isAnimating;
 }
 
-void CanvasRenderer::save(Saver* saver)
+void CanvasRenderer::save(string fileName, Saver* saver)
 {
-	saver->save(m_frames, m_width, m_height);
+	saver->save(fileName, m_frames, m_width, m_height);
+}
+
+void CanvasRenderer::load(string fileName, Saver* saver)
+{
+	SDL_Surface* sprites = saver->load(fileName);
+	if (sprites != nullptr)
+	{
+		int count = sprites->w / sprites->h;
+		int size = sprites->h;
+
+		SDL_Rect copyRect = {
+			0, 0,
+			size, size
+		};
+
+		recreate(size, size);
+		delete m_frames[0];
+		m_frames.clear();
+
+		for (size_t i = 0; i < count; ++i)
+		{
+			SDL_Surface* surface = createEmptySurface(size, size);
+			SDL_BlitSurface(sprites, &copyRect, surface, nullptr);
+			copyRect.x += size;
+			m_frames.push_back(new Canvas(surface));
+		}
+	}
 }
 
 size_t CanvasRenderer::getFramesCount()

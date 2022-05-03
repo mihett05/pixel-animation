@@ -1,9 +1,11 @@
 #pragma once
 #include <SDL.h>
+#include <string>
 #include <cstdint>
 
 using namespace std;
 
+SDL_Surface* createEmptySurface(int w, int h);
 
 class Canvas // CanvASS
 {
@@ -11,6 +13,7 @@ public:
 	SDL_Surface* m_pSurface;
 
 	Canvas(size_t w, size_t h);
+	Canvas(SDL_Surface* surface);
 	~Canvas();
 
 	void update();

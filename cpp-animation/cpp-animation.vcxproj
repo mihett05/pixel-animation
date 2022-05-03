@@ -155,6 +155,7 @@
     <ClCompile Include="Canvas.cpp" />
     <ClCompile Include="CanvasRenderer.cpp" />
     <ClCompile Include="imgui.cpp" />
+    <ClCompile Include="ImGuiFileDialog.cpp" />
     <ClCompile Include="imgui_demo.cpp" />
     <ClCompile Include="imgui_draw.cpp" />
     <ClCompile Include="imgui_impl_sdl.cpp" />
@@ -171,8 +172,11 @@
     <ClInclude Include="Canvas.h" />
     <ClInclude Include="CanvasRenderer.h" />
     <ClInclude Include="constants.h" />
+    <ClInclude Include="dirent.h" />
     <ClInclude Include="imconfig.h" />
     <ClInclude Include="imgui.h" />
+    <ClInclude Include="ImGuiFileDialog.h" />
+    <ClInclude Include="ImGuiFileDialogConfig.h" />
     <ClInclude Include="imgui_impl_sdl.h" />
     <ClInclude Include="imgui_impl_sdlrenderer.h" />
     <ClInclude Include="imgui_internal.h" />
