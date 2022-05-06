@@ -10,8 +10,9 @@ App::App()
 	int w, h;
 	SDL_GetWindowSize(m_pWindow, &w, &h);
 
-	m_pCanvasRenderer = new CanvasRenderer(m_pSettings, m_pRenderer, w, h);
-	m_pInterface = new Interface(m_pSettings, m_pCanvasRenderer);
+	m_pManager = new CanvasManager(m_pSettings);
+	m_pManager->createRenderer(m_pRenderer, w, h);
+	m_pInterface = new Interface(m_pSettings, m_pManager);
 	m_pInterface->init(m_pWindow, m_pRenderer, w, h);
 }
 
@@ -32,13 +33,13 @@ void App::update(SDL_Event& e)
 	};
 	SDL_RenderSetViewport(m_pRenderer, &viewport);
 
-	m_pCanvasRenderer->updateWindowSize(w, h - menuBarOffset);
+	m_pManager->updateWindowSize(w, h - menuBarOffset);
 
 	SDL_SetRenderDrawColor(m_pRenderer, 0, 0, 0, 0xff);
 	SDL_RenderClear(m_pRenderer);
 	
 	
-	m_pCanvasRenderer->update(e);
+	m_pManager->update(e);
 	m_pInterface->update(e);
 	
 	SDL_RenderPresent(m_pRenderer);

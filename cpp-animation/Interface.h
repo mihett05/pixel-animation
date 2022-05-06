@@ -11,7 +11,7 @@
 
 #include "Canvas.h"
 #include "Vector.h"
-#include "CanvasRenderer.h"
+#include "CanvasManager.h"
 #include "Settings.h"
 #include "Saver.h"
 
@@ -20,7 +20,7 @@ using namespace std;
 class Interface
 {
 private:
-	CanvasRenderer* m_pRenderer;
+	CanvasManager* m_pManager;
 	Settings* m_pSettings;
 	Saver* m_pSaver;
 
@@ -30,7 +30,7 @@ private:
 	void renderAnimation();
 	void render();
 public:
-	Interface(Settings* settings, CanvasRenderer* renderer);
+	Interface(Settings* settings, CanvasManager* renderer);
 	void init(SDL_Window* win, SDL_Renderer* renderer, int w, int h);
 	void update(SDL_Event& e);
 };

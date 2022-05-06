@@ -11,42 +11,27 @@
 #include "Settings.h"
 #include "Saver.h"
 #include "constants.h"
+#include "AnimationManager.h"
 
 using namespace std;
-
-void pushAnimation(Settings* settings);
 
 class CanvasRenderer
 {
 private:
 	SDL_Renderer* m_pRenderer;
-	vector<Canvas*> m_frames;
 	Canvas* m_pBackgroundCanvas;
-	size_t m_width = 32;
-	size_t m_height = 32;
 	Settings* m_pSettings;
+	Animation* m_pAnimation;
 
 	size_t m_winWidth = 0;
 	size_t m_winHeight = 0;
-	bool m_isMousePressed = false;
 
 	int m_offsetX = 0;
 	int m_offsetY = 0;
 
-	Uint64 lastTick = 0;
+	Canvas* canvas();
 
-	Vector<double> getSizeOfBlock();
-
-	double getOriginalCoeff();
-	double getCoeff();
-	Vector<double> getCanvasCoords(int x, int y);
-	Vector<int> getOffset();
-	bool keyWasPressed(SDL_Event& e, SDL_Scancode key);
-
-	Canvas* canvas(); // to get current canvas
 	void createBackground();
-
-	void actOnCanvas(size_t x, size_t y);
 
 	void renderBackground(SDL_Rect& rect);
 	void renderCanvas(Canvas* c, bool checkPrev = false);
@@ -56,21 +41,26 @@ private:
 	void render();
 
 public:
-	CanvasRenderer(Settings* settings, SDL_Renderer* renderer, size_t w, size_t h);
-	int m_currentFrame = 0;
+	CanvasRenderer(Settings* settings, SDL_Renderer* renderer, Animation* animation, size_t winWidth, size_t winHeight);
 
-	void recreate(int w, int h);
-	void newFrame();
-	void deleteFrame();
+	Vector<double> getSizeOfBlock();
+
+	double getOriginalCoeff();
+	double getCoeff();
+	Vector<double> getCanvasCoords(int x, int y);
+	Vector<int> getOffset();
+
+	void reload(Animation* animation);
+
+	void renderSelected(SDL_Event& e);
+	bool isInsideCanvas(int x, int y);
+
+	void zoom(bool isZooming);
+	void shift(int x, int y);
 
 	void updateWindowSize(int w, int h);
 	void update(SDL_Event& e);
 
-	void switchAnimation();
-	void save(string fileName, Saver* saver);
-	void load(string fileName, Saver* saver);
-
-	size_t getFramesCount();
 	Vector<int> getSizeInWindow();
 };
 

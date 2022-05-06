@@ -16,6 +16,6 @@ public:
 	Saver();
 
 	void save(string fileName, vector<Canvas*>& frames, int frameWidth, int frameHeight);
-	SDL_Surface* load(string fileName);
+	bool load(string fileName, vector<Canvas*>& frames);
 };
 

@@ -1,6 +1,6 @@
 #include "Interface.h"
 
-Interface::Interface(Settings* settings, CanvasRenderer* renderer) : m_pSettings(settings), m_pRenderer(renderer)
+Interface::Interface(Settings* settings, CanvasManager* manager) : m_pSettings(settings), m_pManager(manager)
 {
 	m_pSaver = new Saver();
 }
@@ -40,29 +40,30 @@ void Interface::renderTool()
 
 void Interface::renderFrames()
 {
-	int currentFrame = m_pRenderer->m_currentFrame + 1;
+	Animation* animation = m_pManager->getAnimation();
+	int currentFrame = animation->getCurrentFrame() + 1;
 	ImGui::SetNextWindowPos({ 0, 0 }, ImGuiCond_FirstUseEver);
 
 	ImGui::Begin("Frames");
 	ImGui::BeginDisabled(m_pSettings->isAnimating);
-		if (ImGui::SliderInt("Frame", &currentFrame, 1, m_pRenderer->getFramesCount()))
-			m_pRenderer->m_currentFrame = currentFrame - 1;
+		if (ImGui::SliderInt("Frame", &currentFrame, 1, animation->getFramesCount()))
+			animation->setCurrentFrame(currentFrame - 1);
 		if (ImGui::Button("Create new frame"))
-			m_pRenderer->newFrame();
+			animation->newFrame();
 
-		bool previusEnabled = m_pRenderer->m_currentFrame - 1 >= 0;
-		bool nextEnabled = m_pRenderer->m_currentFrame + 1 < m_pRenderer->getFramesCount();
+		bool previusEnabled = animation->getCurrentFrame() - 1 >= 0;
+		bool nextEnabled = animation->getCurrentFrame() + 1 < animation->getFramesCount();
 		// next/prev buttons
 		ImGui::BeginDisabled(!previusEnabled);
-			if (ImGui::Button("<< Prev") && previusEnabled)
-				--m_pRenderer->m_currentFrame;
+		if (ImGui::Button("<< Prev") && previusEnabled)
+			animation->prev();
 		ImGui::EndDisabled();
 
 		ImGui::SameLine();
 
 		ImGui::BeginDisabled(!nextEnabled);
-			if (ImGui::Button(">> Next") && nextEnabled)
-				++m_pRenderer->m_currentFrame;
+		if (ImGui::Button(">> Next") && nextEnabled)
+			animation->next();
 		ImGui::EndDisabled();
 
 		ImGui::Checkbox("Enable previous map", &m_pSettings->previousMap);
@@ -70,8 +71,8 @@ void Interface::renderFrames()
 
 		ImGui::SliderInt("Prev alpha", &m_pSettings->alpha, 0, 255);
 
-		if (ImGui::Button("Delete frame") && m_pRenderer->getFramesCount() - 1 > 0)
-			m_pRenderer->deleteFrame();
+		if (ImGui::Button("Delete frame") && animation->getCurrentFrame() - 1 > 0)
+			animation->deleteFrame();
 
 	ImGui::EndDisabled();
 	ImGui::End();
@@ -79,13 +80,15 @@ void Interface::renderFrames()
 
 void Interface::renderAnimation()
 {
+	Animation* animation = m_pManager->getAnimation();
+
 	ImGui::SetNextWindowPos({ 0, 0 }, ImGuiCond_FirstUseEver);
 	ImGui::Begin("Animation");
 
-	if (m_pRenderer->getFramesCount() == 1)
+	if (animation->getFramesCount() == 1)
 		ImGui::Text("Can't animate only with 1 frame");
 
-	ImGui::BeginDisabled(m_pRenderer->getFramesCount() == 1);
+	ImGui::BeginDisabled(animation->getFramesCount() == 1);
 
 	ImGui::SliderInt("Delay", &m_pSettings->delay, 1, 10);
 
@@ -104,6 +107,8 @@ void Interface::renderMenu()
 {
 	static string sizes[] = {"8x8", "16x16", "24x24", "32x32", "48x48", "64x64"};
 
+	Animation* animation = m_pManager->getAnimation();
+
 	if (ImGui::BeginMainMenuBar())
 	{
 		if (ImGui::BeginMenu("File"))
@@ -115,7 +120,7 @@ void Interface::renderMenu()
 					if (ImGui::MenuItem(sizes[i].c_str()))
 					{
 						int size = stoi(sizes[i].substr(0, sizes[i].length() / 2));
-						m_pRenderer->recreate(size, size);
+						m_pManager->reload(size, size);
 					}
 				}
 				ImGui::EndMenu();
@@ -139,13 +144,16 @@ void Interface::renderMenu()
 	if (ImGuiFileDialog::Instance()->Display("SaveDialog"))
 	{
 		if (ImGuiFileDialog::Instance()->IsOk())
-			m_pRenderer->save(ImGuiFileDialog::Instance()->GetFilePathName(), m_pSaver);
+			animation->save(ImGuiFileDialog::Instance()->GetFilePathName(), m_pSaver);
 		ImGuiFileDialog::Instance()->Close();
 	}
 	if (ImGuiFileDialog::Instance()->Display("LoadDialog"))
 	{
 		if (ImGuiFileDialog::Instance()->IsOk())
-			m_pRenderer->load(ImGuiFileDialog::Instance()->GetFilePathName(), m_pSaver);
+		{
+			m_pManager->getRenderer()->reload(animation);  // to remove offset
+			animation->load(ImGuiFileDialog::Instance()->GetFilePathName(), m_pSaver);
+		}
 		ImGuiFileDialog::Instance()->Close();
 	}
 }

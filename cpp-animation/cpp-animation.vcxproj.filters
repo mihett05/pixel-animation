@@ -63,6 +63,15 @@
     <ClCompile Include="ImGuiFileDialog.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
+    <ClCompile Include="CanvasManager.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimationManager.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Animation.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h">
@@ -121,6 +130,15 @@
     </ClInclude>
     <ClInclude Include="dirent.h">
       <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="CanvasManager.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimationManager.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation.h">
+      <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

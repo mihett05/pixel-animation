@@ -151,8 +151,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Animation.cpp" />
+    <ClCompile Include="AnimationManager.cpp" />
     <ClCompile Include="App.cpp" />
     <ClCompile Include="Canvas.cpp" />
+    <ClCompile Include="CanvasManager.cpp" />
     <ClCompile Include="CanvasRenderer.cpp" />
     <ClCompile Include="imgui.cpp" />
     <ClCompile Include="ImGuiFileDialog.cpp" />
@@ -168,8 +171,11 @@
     <ClCompile Include="Settings.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Animation.h" />
+    <ClInclude Include="AnimationManager.h" />
     <ClInclude Include="App.h" />
     <ClInclude Include="Canvas.h" />
+    <ClInclude Include="CanvasManager.h" />
     <ClInclude Include="CanvasRenderer.h" />
     <ClInclude Include="constants.h" />
     <ClInclude Include="dirent.h" />

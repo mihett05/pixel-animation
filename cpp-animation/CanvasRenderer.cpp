@@ -1,35 +1,6 @@
 #include "CanvasRenderer.h"
 
 
-Uint32 animationCallback(Uint32 interval, void* param)
-{
-	Settings* settings = (Settings*)param;
-
-	if (settings->isAnimating)
-	{
-		SDL_Event e;
-		SDL_UserEvent userEvent;
-
-		userEvent.type = SDL_USEREVENT;
-		userEvent.code = 0;
-		userEvent.data1 = nullptr;
-		userEvent.data2 = nullptr;
-
-		e.type = SDL_USEREVENT;
-		e.user = userEvent;
-
-		SDL_PushEvent(&e);
-	}
-
-	return interval;
-}
-
-void pushAnimation(Settings* settings)
-{ 
-	SDL_RemoveTimer(settings->lastTimerId);
-	settings->lastTimerId = SDL_AddTimer((33 / 10) * 50 * settings->delay, animationCallback, settings);
-}
-
 Vector<double> CanvasRenderer::getSizeOfBlock()
 {
 	return {
@@ -68,14 +39,9 @@ Vector<int> CanvasRenderer::getOffset()
 	};
 }
 
-bool CanvasRenderer::keyWasPressed(SDL_Event& e, SDL_Scancode s)
-{
-	return e.type == SDL_KEYDOWN && e.key.keysym.scancode == s;
-}
-
 Canvas* CanvasRenderer::canvas()
 {
-	return m_frames[m_currentFrame];
+	return m_pAnimation->getCanvas();
 }
 
 void CanvasRenderer::createBackground()
@@ -104,30 +70,6 @@ void CanvasRenderer::createBackground()
 		microRect.x = 0;
 		microRect.y += 1;
 	}
-}
-
-void CanvasRenderer::actOnCanvas(size_t x, size_t y)
-{
-	auto coords = getCanvasCoords(x, y);
-	auto offset = getOffset();
-
-	SDL_Color color = {
-		255, 255, 255, 0
-	};
-
-	if (m_pSettings->tool == DrawTool::brush)
-		color = {
-			Uint8(m_pSettings->color[0] * 255),
-			Uint8(m_pSettings->color[1] * 255),
-			Uint8(m_pSettings->color[2] * 255),
-			Uint8(m_pSettings->color[3] * 255)
-		};
-
-	canvas()->setPixel(
-		coords.x + offset.x,
-		coords.y + offset.y,
-		color
-	);
 }
 
 void CanvasRenderer::renderBackground(SDL_Rect& rect)
@@ -160,7 +102,7 @@ void CanvasRenderer::renderCanvas(Canvas* c, bool checkPrev)
 	};
 	renderBackground(copyRect);
 
-	bool isPrevAvailable = !m_pSettings->isAnimating && checkPrev && m_pSettings->previousAlpha && m_currentFrame - 1 >= 0;
+	bool isPrevAvailable = !m_pSettings->isAnimating && checkPrev && m_pSettings->previousAlpha && m_pAnimation->getCurrentFrame() - 1 >= 0;
 	double origCoeff = getOriginalCoeff();
 
 	SDL_Texture* t = SDL_CreateTextureFromSurface(m_pRenderer, c->m_pSurface);
@@ -176,7 +118,7 @@ void CanvasRenderer::renderCanvas(Canvas* c, bool checkPrev)
 	SDL_RenderCopy(m_pRenderer, t, &zoomRect, &copyRect);
 	if (isPrevAvailable)
 	{
-		Canvas* prevCanvas = m_frames[m_currentFrame - 1];
+		Canvas* prevCanvas = m_pAnimation->getFrame(m_pAnimation->getCurrentFrame() - 1);
 		SDL_Texture* prev = SDL_CreateTextureFromSurface(m_pRenderer, prevCanvas->m_pSurface);
 		SDL_SetTextureAlphaMod(prev, m_pSettings->alpha);
 		SDL_RenderCopy(m_pRenderer, prev, &zoomRect, &copyRect);
@@ -237,9 +179,9 @@ void CanvasRenderer::renderMinimap()
 
 void CanvasRenderer::renderPrevious()
 {
-	if (m_currentFrame - 1 >= 0)
+	if (m_pAnimation->getCurrentFrame() - 1 >= 0)
 	{
-		Canvas* prevCanvas = m_frames[m_currentFrame - 1];
+		Canvas* prevCanvas = m_pAnimation->getFrame(m_pAnimation->getCurrentFrame() - 1);
 		double origCoeff = getOriginalCoeff();
 		auto size = getSizeInWindow();
 
@@ -274,94 +216,35 @@ void CanvasRenderer::render()
 	
 }
 
-CanvasRenderer::CanvasRenderer(Settings* settings, SDL_Renderer* renderer, size_t w, size_t h) 
-	: m_pSettings(settings), m_pRenderer(renderer), m_winWidth(w), m_winHeight(h)
+CanvasRenderer::CanvasRenderer(
+	Settings* settings, SDL_Renderer* renderer,
+	Animation* animation, size_t winWidth, size_t winHeight
+)
+	: m_pSettings(settings), m_pRenderer(renderer), m_winWidth(winWidth), m_winHeight(winHeight), m_pAnimation(animation)
 {
-	m_frames.reserve(32);
-	m_frames.push_back(new Canvas(m_width, m_height));
 	createBackground();
 }
 
-void CanvasRenderer::recreate(int w, int h)
+void CanvasRenderer::reload(Animation* animation)
 {
-	m_width = w;
-	m_height = h;
-
-	for (size_t i = 0; i < m_frames.size(); ++i)
-		delete m_frames[i];
-
-	m_frames.clear();
-	m_frames.push_back(new Canvas(m_width, m_height));
-	m_currentFrame = 0;
-
-	m_pSettings->zoom = 1;
-	m_pSettings->isAnimating = false;
+	m_pAnimation = animation;
 	m_offsetX = 0;
 	m_offsetY = 0;
 }
 
-void CanvasRenderer::newFrame()
-{
-	m_frames.push_back(new Canvas(m_width, m_height));
-	++m_currentFrame;
-}
-
-void CanvasRenderer::deleteFrame()
-{
-	if (getFramesCount() - 1 > 0)
-	{
-		size_t frameToDelete = m_currentFrame;
-		delete m_frames[frameToDelete];
-		m_frames.erase(m_frames.begin() + frameToDelete);
-		if (m_currentFrame != 0)
-			--m_currentFrame;
-	}
-}
-
-void CanvasRenderer::updateWindowSize(int w, int h)
-{
-	m_winWidth = w;
-	m_winHeight = h;
-}
-
-void CanvasRenderer::update(SDL_Event& e)
+void CanvasRenderer::renderSelected(SDL_Event& e)
 {
 	double origCoeff = getOriginalCoeff();
 	double coeff = getCoeff();
 	auto block = getSizeOfBlock();
 	auto offset = getOffset();
-	
-	if (m_pSettings->isAnimating)
-	{
-		if (e.type == SDL_USEREVENT && e.user.code == 0)
-			pushAnimation(m_pSettings); // update doesn't work without lots of events
-		
-		if (SDL_GetTicks() - lastTick > (33 / 10) * 100 * m_pSettings->delay)
-		{
-			lastTick = SDL_GetTicks64();
-			m_currentFrame = (m_currentFrame + 1) % getFramesCount();
-		}
-	}
-
-	render();
-
-	if (m_pSettings->isAnimating)
-		return; // to doesn't interact while animation
-
-	if (e.type == SDL_MOUSEBUTTONDOWN)
-		m_isMousePressed = true;
-	else if (e.type == SDL_MOUSEBUTTONUP)
-		m_isMousePressed = false;
 
 	bool isInsideX = e.motion.x >= 0 && e.motion.x < canvas()->getWidth() * origCoeff;
 	bool isInsideY = e.motion.y >= 0 && e.motion.y < canvas()->getHeight() * origCoeff + menuBarOffset;
-	
-	bool isCaptured = ImGui::IsWindowHovered(ImGuiFocusedFlags_AnyWindow) || ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow);
-	if (isInsideX && isInsideY && !isCaptured)
-	{
-		if (e.type == SDL_MOUSEBUTTONDOWN || (e.type == SDL_MOUSEMOTION && m_isMousePressed))
-			actOnCanvas(e.motion.x, e.motion.y);
 
+	bool isCaptured = ImGui::IsWindowHovered(ImGuiFocusedFlags_AnyWindow) || ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow);
+	if (isInsideCanvas(e.motion.x, e.motion.y))
+	{
 		if (e.type == SDL_MOUSEMOTION)
 		{
 			auto coords = getCanvasCoords(e.motion.x, e.motion.y);
@@ -374,10 +257,27 @@ void CanvasRenderer::update(SDL_Event& e)
 			SDL_RenderDrawRectF(m_pRenderer, &select);
 		}
 	}
+}
 
-	if (keyWasPressed(e, SDL_SCANCODE_Z) && m_pSettings->zoom < m_pSettings->maxZoom)
+bool CanvasRenderer::isInsideCanvas(int x, int y)
+{
+	double origCoeff = getOriginalCoeff();
+	double coeff = getCoeff();
+	auto block = getSizeOfBlock();
+	auto offset = getOffset();
+
+	bool isInsideX = x >= 0 && x < canvas()->getWidth()* origCoeff;
+	bool isInsideY = y >= 0 && y < canvas()->getHeight()* origCoeff + menuBarOffset;
+	bool isCaptured = ImGui::IsWindowHovered(ImGuiFocusedFlags_AnyWindow) || ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow);
+
+	return isInsideX && isInsideY && !isCaptured;
+}
+
+void CanvasRenderer::zoom(bool isZooming)
+{
+	if (isZooming && m_pSettings->zoom < m_pSettings->maxZoom)
 		m_pSettings->zoom *= 2;
-	else if (keyWasPressed(e, SDL_SCANCODE_X) && m_pSettings->zoom > 1)
+	else if (!isZooming && m_pSettings->zoom > 1)
 	{
 		m_pSettings->zoom /= 2;
 		if (m_pSettings->zoom > 1)
@@ -389,62 +289,25 @@ void CanvasRenderer::update(SDL_Event& e)
 			if (m_offsetY + newBlock.y > canvas()->getHeight() && m_offsetY - newBlock.y / 2 >= 0) m_offsetY -= newBlock.y / 2;
 		}
 	}
-
-	if (m_pSettings->zoom > 1)
-	{
-		int shift = m_pSettings->maxZoom / m_pSettings->zoom;
-		int remainsX = canvas()->getWidth() - offset.x - shift - block.x;
-		int remainsY = canvas()->getHeight() - offset.y - shift - block.y;
-		
-		if (keyWasPressed(e, SDL_SCANCODE_UP) && offset.y - shift >= 0) m_offsetY -= shift;
-		else if (keyWasPressed(e, SDL_SCANCODE_DOWN) && remainsY >= 0) m_offsetY += shift;
-		if (keyWasPressed(e, SDL_SCANCODE_LEFT) && offset.x - shift >= 0) m_offsetX -= shift;
-		else if (keyWasPressed(e, SDL_SCANCODE_RIGHT) && remainsX >= 0) m_offsetX += shift;
-	}
-	
 }
 
-void CanvasRenderer::switchAnimation()
+void CanvasRenderer::shift(int x, int y)
 {
-	lastTick = SDL_GetTicks64();
-	m_pSettings->isAnimating = !m_pSettings->isAnimating;
+	m_offsetX += x;
+	m_offsetY += y;
 }
 
-void CanvasRenderer::save(string fileName, Saver* saver)
+void CanvasRenderer::updateWindowSize(int w, int h)
 {
-	saver->save(fileName, m_frames, m_width, m_height);
+	m_winWidth = w;
+	m_winHeight = h;
 }
 
-void CanvasRenderer::load(string fileName, Saver* saver)
+void CanvasRenderer::update(SDL_Event& e)
 {
-	SDL_Surface* sprites = saver->load(fileName);
-	if (sprites != nullptr)
-	{
-		int count = sprites->w / sprites->h;
-		int size = sprites->h;
-
-		SDL_Rect copyRect = {
-			0, 0,
-			size, size
-		};
-
-		recreate(size, size);
-		delete m_frames[0];
-		m_frames.clear();
-
-		for (size_t i = 0; i < count; ++i)
-		{
-			SDL_Surface* surface = createEmptySurface(size, size);
-			SDL_BlitSurface(sprites, &copyRect, surface, nullptr);
-			copyRect.x += size;
-			m_frames.push_back(new Canvas(surface));
-		}
-	}
-}
-
-size_t CanvasRenderer::getFramesCount()
-{
-	return m_frames.size();
+	render();
+	if (!m_pSettings->isAnimating)
+		renderSelected(e);
 }
 
 Vector<int> CanvasRenderer::getSizeInWindow()

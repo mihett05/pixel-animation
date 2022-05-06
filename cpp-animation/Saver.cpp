@@ -19,7 +19,31 @@ void Saver::save(string fileName, vector<Canvas*>& frames, int frameWidth, int f
 	SDL_FreeSurface(resultSurface);
 }
 
-SDL_Surface* Saver::load(string fileName)
+bool Saver::load(string fileName, vector<Canvas*>& frames)
 {
-	return IMG_Load(fileName.c_str());
+	SDL_Surface* sprites = IMG_Load(fileName.c_str());
+	
+	if (sprites != nullptr)
+	{
+		int count = sprites->w / sprites->h;
+		int size = sprites->h;
+
+		frames.clear();
+		frames.reserve(count);
+
+		SDL_Rect copyRect = {
+			0, 0,
+			size, size
+		};
+
+		for (size_t i = 0; i < count; ++i)
+		{
+			SDL_Surface* surface = createEmptySurface(size, size);
+			SDL_BlitSurface(sprites, &copyRect, surface, nullptr);
+			copyRect.x += size;
+			frames.push_back(new Canvas(surface));
+		}
+	}
+	
+	return sprites != nullptr;
 }

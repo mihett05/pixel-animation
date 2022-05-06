@@ -6,6 +6,7 @@
 #include "Canvas.h"
 #include "Vector.h"
 #include "CanvasRenderer.h"
+#include "CanvasManager.h"
 #include "Interface.h"
 #include "Settings.h"
 #include "constants.h"
@@ -19,7 +20,7 @@ private:
 	SDL_Window* m_pWindow;
 	SDL_Renderer* m_pRenderer;
 	Settings* m_pSettings;
-	CanvasRenderer* m_pCanvasRenderer;
+	CanvasManager* m_pManager;
 	Interface* m_pInterface;
 
 public:
